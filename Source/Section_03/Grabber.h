@@ -38,4 +38,5 @@ private:
 	void FindPhysicsHandleComponent();
 	void SetupInputComponent();
 	FHitResult GetFirstPhysicsBodyInReach() const;
+	FTwoVectors GetLineTracePoints() const;
 };

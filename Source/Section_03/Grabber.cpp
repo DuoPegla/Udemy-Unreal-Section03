@@ -29,15 +29,14 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	FVector PlayerViewPointLocation;
-	FRotator PlayerViewPointRotation;
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(PlayerViewPointLocation, PlayerViewPointRotation);
-
-	FVector LineTraceEnd = PlayerViewPointLocation + PlayerViewPointRotation.Vector() * Reach;
+	if (!PhysicsHandle)
+	{
+		return;
+	}
 
 	if (PhysicsHandle->GrabbedComponent)
 	{
-		PhysicsHandle->SetTargetLocation(LineTraceEnd);
+		PhysicsHandle->SetTargetLocation(GetLineTracePoints().v2);
 	}
 }
 
@@ -92,30 +91,29 @@ void UGrabber::SetupInputComponent()
 
 FHitResult UGrabber::GetFirstPhysicsBodyInReach() const
 {
-	FVector PlayerViewPointLocation;
-	FRotator PlayerViewPointRotation;
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(PlayerViewPointLocation, PlayerViewPointRotation);
-
-	FVector LineTraceEnd = PlayerViewPointLocation + PlayerViewPointRotation.Vector() * Reach;
-
-	//DrawDebugLine(GetWorld(), PlayerViewPointLocation, LineTraceEnd, FColor(255, 0, 0));
-
 	FCollisionQueryParams TraceParameters(FName(TEXT("")), false, GetOwner());
 
-	FHitResult Hit;
-	bool DidHit = GetWorld()->LineTraceSingleByObjectType(
-		Hit,
-		PlayerViewPointLocation,
-		LineTraceEnd,
+	FTwoVectors TracePoints = GetLineTracePoints();
+
+	FHitResult HitResult;
+	
+	GetWorld()->LineTraceSingleByObjectType(
+		HitResult,
+		TracePoints.v1,
+		TracePoints.v2,
 		FCollisionObjectQueryParams(ECC_PhysicsBody),
 		TraceParameters
 	);
 
-	if (DidHit)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Hit actor named: %s"), *Hit.GetActor()->GetName());
-	}
+	return HitResult;
+}
 
-	return Hit;
+FTwoVectors UGrabber::GetLineTracePoints() const
+{
+	FVector StartLocation;
+	FRotator PlayerViewRotation;
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(OUT StartLocation, OUT PlayerViewRotation);
+	FVector EndLocation = StartLocation + PlayerViewRotation.Vector() * Reach;
+	return FTwoVectors(StartLocation, EndLocation);
 }
 
