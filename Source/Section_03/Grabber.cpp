@@ -51,7 +51,7 @@ void UGrabber::Grab()
 	UPrimitiveComponent* ComponentToGrab = HitResult.GetComponent();
 	AActor* ActorHit = HitResult.GetActor();
 
-	if (ActorHit)
+	if (ActorHit && PhysicsHandle)
 	{
 		PhysicsHandle->GrabComponent(ComponentToGrab, NAME_None, ComponentToGrab->GetOwner()->GetActorLocation(), true);
 	}
@@ -60,6 +60,11 @@ void UGrabber::Grab()
 void UGrabber::Release()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Grab released"));
+
+	if (!PhysicsHandle)
+	{
+		return;
+	}
 
 	// TODO Release physics handle
 	PhysicsHandle->ReleaseComponent();
